@@ -12,29 +12,28 @@ class Game:
         pygame.init()
         pygame.display.set_caption('Sphinx Quest')
 
-        SCREEN_WIDTH = 960
-        SCREEN_HEIGHT = 720
+        SCREEN_WIDTH = 800
+        SCREEN_HEIGHT = 600
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        #Dá um "zoom" na tela, pois os pixels são muito pequenos
         
         self.clock = pygame.time.Clock()
 
-        self.movement = [False, False]
+        self.clicking = False
 
+        self.mouse_pos = pygame.mouse.get_pos()
         
 
     def run(self):
         #Loop while = 1 frame
         while True:
+            q1 = Quest(self.screen, {'num': 1 , 'dific': 2, 'pergunta':'Essa pergunta e boa?', 'r1':'a', 'r2':'b', 'r3':'c', 'r4':'d'}, self.mouse_pos)
+            q1.load_quest()
+            q1.update()
             #Define o fps (120)
             clock.tick(120)
-            #Preenche a tela com uma cor
-            quests = []
-            q1 = Quest(self.screen, {'num': 1 , 'dific': 2, 'pergunta':'Essa pergunta e boa?', 'r1':'a', 'r2':'b', 'r3':'c', 'r4':'d'})
-            quests.append(q1)
-            self.screen.fill((30, 30, 30))
 
-            q1.load_quest()
+            #Preenche a tela com uma cor
+            self.screen.fill((30, 30, 30))
 
             #Registra os eventos
             for event in pygame.event.get():
@@ -42,6 +41,10 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.clicking = True
+                else:
+                    self.clicking = False
             #Atualiza a tela
             pygame.display.update()
 
