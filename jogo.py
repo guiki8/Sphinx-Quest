@@ -24,7 +24,7 @@ class Game:
             #Preenche a tela com uma cor
             self.screen.fill((30, 30, 30))
 
-            self.q1 = Quest(self.screen, {'num': 1 , 'dific': 2, 'pergunta':'Essa pergunta e boa?', 'r1':'a', 'r2':'b', 'r3':'c', 'r4':'d'})
+            self.q1 = Quest(self.screen, {'num': 1 , 'dific': 2, 'pergunta':'Essa pergunta e boa?', 'r1':'A: sim', 'r2':'B: nao', 'r3':'C: talvez', 'r4':'D: sla porra'})
             self.q1.load_quest()
             self.q1.render()
             
