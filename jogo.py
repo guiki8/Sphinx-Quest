@@ -1,9 +1,11 @@
-import pygame, sys
+import pygame
+import sys
 from scripts.menu import MenuEsfinge
 from scripts.quest import Quest
 from scripts.utils import load_image, load_images
+from scripts.minigame_1 import StarMinigame
 
-#Definição dos fps
+# Definição dos fps
 clock = pygame.time.Clock()
 
 class Game:
@@ -17,28 +19,40 @@ class Game:
         
         self.clock = pygame.time.Clock()
         
-        self.q1 = Quest(self.screen, {'num': 1 , 'dific': 2, 'pergunta':'Essa pergunta e boa?', 'r1':'A: sim', 'r2':'B: nao', 'r3':'C: talvez', 'r4':'D: sla porra'})
+        self.q1 = Quest(self.screen, {'num': 1 , 'dific': 2, 'pergunta':'Essa pergunta e boa?', 'r1':'A: sim', 'r2':'B: nao', 'r3':'C: talvez', 'r4':'D: sla porra', 'rcorreta': 4})
 
     def run(self):
-        #Loop while = 1 frame
+        # Loop while = 1 frame
         while True:
-            #Preenche a tela com uma cor
+            # Preenche a tela com uma cor
             self.screen.fill((30, 30, 30))
-
-            self.q1.load_quest()
-            self.q1.render()
             
-            #Define o fps (120)
+            # Define o fps (60)
             self.clock.tick(60)
 
-            #Registra os eventos
+            quest1 = self.q1.load_quest()
+
+            if quest1:
+                print('prox minigame')
+                mini_game = StarMinigame(self.screen)
+                mini_game.run()  # Inicia o mini game
+                return
+
+            # Registra os eventos
             for event in pygame.event.get():
-                #Registra o evento de clicar no "x" da janela
+                # Registra o evento de clicar no "x" da janela
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 
-            #Atualiza a tela
+                # Verifica se a tecla "D" foi pressionada
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_d:
+                        mini_game = StarMinigame(self.screen)
+                        mini_game.run()  # Inicia o mini game
+                        return
+
+            # Atualiza a tela
             pygame.display.update()
 
 Game().run()

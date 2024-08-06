@@ -50,24 +50,25 @@ class Quest():
             texto = self.fonte.render(self.info['r'+str(1+i)], False, self.font_color)
             self.screen.blit(texto, (quest_box.left + self.font_width, quest_box.centery - quest_box.height/4))
 
-    
-    def render(self):
         #Imprime a mesa na tela, redimensionando para o tamanho certo
         self.screen.blit(pygame.transform.scale(self.assets['table'], (400, 400)), (50,200))
 
         #Carrega os 4 botões na tela, alterando as posições x individuas
         for i in range(4):
-            button = Button(self.screen, self.assets, (62+i*92, 372))
+            button = Button(self.screen, self.assets, (62+i*92, 372), i+1, self.info)
             button.update()
             
 class Button():
-    def __init__(self, screen, assets, pos=(0, 0)):
+    def __init__(self, screen, assets, pos=(0, 0), button_num = 0, info={}):
         self.button_pos = pos
         self.screen = screen
         self.assets = assets
         self.button_size = (100, 100)
         #Pega a imagem do botão e redimensiona para o tamanho correto
         self.button_image = pygame.transform.scale(self.assets['button'], self.button_size)
+        self.button_pressed = False
+        self.button_num = button_num
+        self.resp_correta = info['rcorreta']
 
     def update(self):
         self.mouse_pos = pygame.mouse.get_pos()
@@ -85,8 +86,18 @@ class Button():
         if button_rect.collidepoint(self.mouse_pos) and button_mask.get_at(pos_in_mask) and pygame.mouse.get_pressed()[0]:
             #Troca o spride do botão para apertado
             self.button_image = pygame.transform.scale(self.assets['push_button'], self.button_size)
+            self.button_pressed = True
         else:
             self.button_image = pygame.transform.scale(self.assets['button'], self.button_size)
+            self.button_pressed = False
 
         #Imprime o botão na tela com o sprite renderizado
         self.screen.blit(self.button_image, self.button_pos)
+
+        if self.button_pressed and self.button_num == self.resp_correta:
+            print('acertou!')
+            return True
+            
+        elif self.button_pressed:
+            print('errou')
+            return False
