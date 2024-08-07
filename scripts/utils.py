@@ -1,4 +1,4 @@
-import pygame, os
+import pygame, os, re
 
 BASE_IMG_PATH = 'assets/images/'
 
@@ -8,8 +8,13 @@ def load_image(path):
     return img
 
 def load_images(path):
+    def numerical_sort(value):
+        parts = re.split(r'(\d+)', value)
+        return [int(part) if part.isdigit() else part for part in parts]
+
     images = []
-    for img_name in os.listdir(BASE_IMG_PATH + path):
+    img_files = sorted(os.listdir(BASE_IMG_PATH + path), key=numerical_sort)  # Ordena os arquivos de imagem numericamente
+    for img_name in img_files:
         images.append(load_image(path + '/' + img_name))
     return images
 
@@ -29,7 +34,7 @@ class Animation:
             self.frame = (self.frame + 1) % (self.img_duration * len(self.images))
         else:
             self.frame = min(self.frame + 1, self.img_duration * len(self.images) - 1)
-            if self.frame >= self.img_duration * len(self.images) -1:
+            if self.frame >= self.img_duration * len(self.images) - 1:
                 self.done = True
     
     def img(self):
