@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import os
+import time
 
 class FruitMinigame():
     def __init__(self, screen):
@@ -13,13 +14,8 @@ class FruitMinigame():
         # Load character image
         self.character = pygame.transform.scale(pygame.image.load('assets/images/character.png').convert_alpha(), (64, 64))
         self.char_rect = self.character.get_rect(center=(self.width//2, self.height//2))
-        self.char_mask = pygame.mask.from_surface(self.character)
 
-        # Load background image
-        self.background = pygame.image.load('assets/images/background_1.png').convert_alpha()
-        self.background = pygame.transform.scale(self.background, (400, 400))
-
-        # Load fruits images and resize to 64x64
+        # Load fruits images
         self.fruit_images = {
             'uva': pygame.transform.scale(pygame.image.load('assets/images/fruits/uva.png').convert_alpha(), (64, 64)),
             'cherrie': pygame.transform.scale(pygame.image.load('assets/images/fruits/cherrie.png').convert_alpha(), (64, 64)),
@@ -28,37 +24,65 @@ class FruitMinigame():
         fruit_files = os.listdir('assets/images/fruits/')
         for fruit_file in fruit_files:
             if fruit_file not in ['uva.png', 'cherrie.png']:
-                fruit_image = pygame.transform.scale(pygame.image.load(f'assets/images/fruits/' + fruit_file).convert_alpha(), (64, 64))
+                fruit_image = pygame.transform.scale(pygame.image.load(f'assets/images/fruits/{fruit_file}').convert_alpha(), (64, 64))
                 self.fruit_images['other'].append(fruit_image)
 
         self.fruits = self.randomize_fruits()
 
+        self.font_color = (0, 150, 200)
+        self.font_size = 25
+        self.fonte = pygame.font.Font('assets/fonts/Pixel.ttf', self.font_size)
+        self.fonte_bold = pygame.font.Font('assets/fonts/PixelBold.ttf', self.font_size)
+        self.font_width = self.font_size * 0.3
+
+        # Timer for blinking text box
+        self.blink_timer = 0
+        self.show_text_box = True
+
     def randomize_fruits(self):
         fruits = []
-        num_uvas = random.randint(1, 3)
-        for _ in range(num_uvas):  # Add 1-3 uvas
-            fruit_image = self.fruit_images['uva']
-            fruit_rect = self.get_non_colliding_rect(fruit_image)
-            fruit_mask = pygame.mask.from_surface(fruit_image)
-            fruits.append((fruit_image, fruit_rect, 'uva', fruit_mask))
-
-        while len(fruits) < 10:  # Add random fruits until there are 10
-            fruit_type = random.choice(['cherrie', 'other'])
+        num_uvas = random.randint(1, 3)  # Number of grapes
+        for _ in range(10):  # Add 10 random fruits
+            if num_uvas > 0:
+                fruit_type = 'uva'
+                num_uvas -= 1
+            else:
+                fruit_type = random.choice(['cherrie', 'other'])
             if fruit_type == 'other':
                 fruit_image = random.choice(self.fruit_images['other'])
             else:
                 fruit_image = self.fruit_images[fruit_type]
-            fruit_rect = self.get_non_colliding_rect(fruit_image)
-            fruit_mask = pygame.mask.from_surface(fruit_image)
-            fruits.append((fruit_image, fruit_rect, fruit_type, fruit_mask))
+            fruit_rect = fruit_image.get_rect(
+                center=(random.randint(50, self.width - 50), random.randint(50, self.height - 50)))
+            while fruit_rect.colliderect(self.char_rect):  # Ensure fruit does not spawn on the character
+                fruit_rect = fruit_image.get_rect(
+                    center=(random.randint(50, self.width - 50), random.randint(50, self.height - 50)))
+            fruits.append((fruit_image, fruit_rect, fruit_type))
         return fruits
 
-    def get_non_colliding_rect(self, fruit_image):
-        while True:
-            fruit_rect = fruit_image.get_rect(
-                center=(random.randint(50, self.width-50), random.randint(50, self.height-50)))
-            if not fruit_rect.colliderect(self.char_rect.inflate(128, 128)):
-                return fruit_rect
+    def draw_text_box(self):
+        quest_box = pygame.Rect(300, 20, len('Get the Grape!!') * (self.font_size - self.font_width) + self.font_width, 50)
+        pygame.draw.rect(self.screen, (255, 255, 255), quest_box)
+        pygame.draw.rect(self.screen, self.font_color, quest_box, 3)
+        texto = self.fonte.render('Get the Grape!!', False, self.font_color)
+        self.screen.blit(texto, (quest_box.left + self.font_width, quest_box.centery - quest_box.height / 4))
+
+    def pixel_collision(self, rect1, image1, rect2, image2):
+        overlap_rect = rect1.clip(rect2)
+        if overlap_rect.width == 0 or overlap_rect.height == 0:
+            return False
+        
+        surface1 = pygame.surfarray.array_alpha(image1)
+        surface2 = pygame.surfarray.array_alpha(image2)
+
+        x1, y1 = overlap_rect.left - rect1.left, overlap_rect.top - rect1.top
+        x2, y2 = overlap_rect.left - rect2.left, overlap_rect.top - rect2.top
+
+        for x in range(overlap_rect.width):
+            for y in range(overlap_rect.height):
+                if surface1[x1 + x][y1 + y] and surface2[x2 + x][y2 + y]:
+                    return True
+        return False
 
     def run(self):
         while self.running:
@@ -80,28 +104,32 @@ class FruitMinigame():
             if keys[pygame.K_s]:
                 self.char_rect.y += 5
 
-            # Fill the screen with the repeated background
+            background = pygame.image.load('assets/images/background_1.png').convert_alpha()
+            background = pygame.transform.scale(background, (400, 400))
+
+            # Draw the tiled background
             for x in range(0, self.width, 400):
                 for y in range(0, self.height, 400):
-                    self.screen.blit(self.background, (x, y))
+                    self.screen.blit(background, (x, y))
 
-            # Draw fruits
-            for fruit_image, fruit_rect, fruit_type, fruit_mask in self.fruits:
+            # Draw fruits and check for collision
+            for fruit_image, fruit_rect, fruit_type in self.fruits:
                 self.screen.blit(fruit_image, fruit_rect)
-                offset = (fruit_rect.x - self.char_rect.x, fruit_rect.y - self.char_rect.y)
-                if self.char_mask.overlap(fruit_mask, offset):
-                    if fruit_type == 'cherrie':
-                        print("You died!")
-                        self.running = False
-                    elif fruit_type == 'uva':
-                        print("You won!")
-                        self.running = False
-                    else:  # Other fruits
-                        print("You died!")
-                        self.running = False
+                if self.pixel_collision(self.char_rect, self.character, fruit_rect, fruit_image):
+                    print(f"You touched a {fruit_type}!")
+                    self.running = False
 
-            # Draw character
+            # Draw the character
             self.screen.blit(self.character, self.char_rect)
+
+            # Blinking text box
+            self.blink_timer += self.clock.get_time()
+            if self.blink_timer >= 300:  # 0.3 seconds
+                self.show_text_box = not self.show_text_box
+                self.blink_timer = 0
+
+            if self.show_text_box:
+                self.draw_text_box()
 
             pygame.display.flip()
             self.clock.tick(60)

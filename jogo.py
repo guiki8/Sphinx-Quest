@@ -17,6 +17,24 @@ class Game:
         
         self.q1 = Quest(self.screen, {'num': 1 , 'dific': 2, 'pergunta':'Essa pergunta e boa?', 'r1':'A: sim', 'r2':'B: nao', 'r3':'C: talvez', 'r4':'D: sla porra', 'rcorreta': 4})
 
+    def fade_out(self, duration):
+        fade_surface = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
+        fade_surface.fill((0, 0, 0))
+        for alpha in range(0, 255):
+            fade_surface.set_alpha(alpha)
+            self.screen.blit(fade_surface, (0, 0))
+            pygame.display.update()
+            pygame.time.delay(duration // 255)
+
+    def fade_in(self, duration):
+        fade_surface = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
+        fade_surface.fill((0, 0, 0))
+        for alpha in range(255, 0, -1):
+            fade_surface.set_alpha(alpha)
+            self.screen.blit(fade_surface, (0, 0))
+            pygame.display.update()
+            pygame.time.delay(duration // 255)
+
     def run(self):
         # Loop while = 1 frame
         while True:
@@ -29,11 +47,13 @@ class Game:
             quest1 = self.q1.load_quest()
 
             if quest1:
-                time.sleep(2)
+                time.sleep(1)
                 print('prox minigame')
-                # Inicia o novo mini game
+                # Transição para o novo mini game
+                self.fade_out(1000)  # Fade out in 1 second
                 mini_game = FruitMinigame(self.screen)
                 mini_game.run()  # Inicia o mini game
+                self.fade_in(1000)  # Fade in in 1 second
                 return
 
             # Registra os eventos

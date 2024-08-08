@@ -3,19 +3,20 @@ import pygame, os, re
 BASE_IMG_PATH = 'assets/images/'
 
 def load_image(path):
-    img = pygame.image.load(BASE_IMG_PATH + path).convert()
-    img.set_colorkey((0, 0, 0))
-    return img
+    try:
+        img = pygame.image.load(BASE_IMG_PATH + path).convert_alpha()
+        return img
+    except pygame.error as e:
+        print(f"Error loading image {path}: {e}")
+        return None
 
 def load_images(path):
     def numerical_sort(value):
         parts = re.split(r'(\d+)', value)
         return [int(part) if part.isdigit() else part for part in parts]
 
-    images = []
-    img_files = sorted(os.listdir(BASE_IMG_PATH + path), key=numerical_sort)  # Ordena os arquivos de imagem numericamente
-    for img_name in img_files:
-        images.append(load_image(path + '/' + img_name))
+    image_paths = sorted(os.listdir(BASE_IMG_PATH + path), key=numerical_sort)
+    images = [load_image(os.path.join(path, img_name)) for img_name in image_paths if img_name.endswith(('.png', '.jpg'))]
     return images
 
 class Animation:
@@ -33,9 +34,10 @@ class Animation:
         if self.loop:
             self.frame = (self.frame + 1) % (self.img_duration * len(self.images))
         else:
-            self.frame = min(self.frame + 1, self.img_duration * len(self.images) - 1)
-            if self.frame >= self.img_duration * len(self.images) - 1:
+            if self.frame < (self.img_duration * len(self.images) - 1):
+                self.frame += 1
+            else:
                 self.done = True
     
     def img(self):
-        return self.images[int(self.frame / self.img_duration)]
+        return self.images[self.frame // self.img_duration]
