@@ -2,7 +2,7 @@ import pygame
 import sys
 import random
 import os
-import time
+from pygame import mixer
 
 class FruitMinigame():
     def __init__(self, screen):
@@ -13,7 +13,7 @@ class FruitMinigame():
 
         # Load character image
         self.character = pygame.transform.scale(pygame.image.load('assets/images/character.png').convert_alpha(), (64, 64))
-        self.char_rect = self.character.get_rect(center=(self.width//2, self.height//2))
+        self.char_rect = self.character.get_rect(center=(self.width // 2, self.height // 2))
 
         # Load fruits images
         self.fruit_images = {
@@ -77,15 +77,19 @@ class FruitMinigame():
         self.screen.blit(texto, (quest_box.left + self.font_width, quest_box.centery - quest_box.height / 4))
 
     def pixel_collision(self, rect1, image1, rect2, image2):
+        # Create masks from the surfaces
+        mask1 = pygame.mask.from_surface(image1)
+        mask2 = pygame.mask.from_surface(image2)
+        
+        # Calculate the overlap rectangle
         overlap_rect = rect1.clip(rect2)
         if overlap_rect.width == 0 or overlap_rect.height == 0:
             return False
         
-        # Convert images to the correct format
-        mask1 = pygame.mask.from_surface(image1)
-        mask2 = pygame.mask.from_surface(image2)
-
+        # Calculate offset for mask overlap
         offset = (overlap_rect.left - rect2.left, overlap_rect.top - rect2.top)
+        
+        # Check if masks overlap
         if mask1.overlap(mask2, offset):
             return True
         return False
@@ -124,10 +128,14 @@ class FruitMinigame():
                 if self.pixel_collision(self.char_rect, self.character, fruit_rect, fruit_image):
                     if fruit_type == 'uva':
                         self.sound_correct.play()
+                        print("You got a grape!")
+                        return True
                     else:
                         self.sound_wrong.play()
-                    print(f"You touched a {fruit_type}!")
-                    self.running = False
+                        print(f"You touched a {fruit_type}!")
+                        pygame.time.delay(1000)  # Adiciona um atraso de 1000ms para garantir que o som toque completamente
+                        return False
+
 
             # Draw the character
             self.screen.blit(self.character, self.char_rect)
@@ -147,6 +155,7 @@ class FruitMinigame():
 # Teste do mini game
 if __name__ == "__main__":
     pygame.init()
+    mixer.init()
     screen = pygame.display.set_mode((800, 600))
     FruitMinigame(screen).run()
     pygame.quit()
