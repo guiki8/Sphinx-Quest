@@ -19,15 +19,23 @@ class FruitMinigame():
         self.fruit_images = {
             'uva': pygame.transform.scale(pygame.image.load('assets/images/fruits/uva.png').convert_alpha(), (64, 64)),
             'cherrie': pygame.transform.scale(pygame.image.load('assets/images/fruits/cherrie.png').convert_alpha(), (64, 64)),
-            'other': []
+            'frutas': []
         }
         fruit_files = os.listdir('assets/images/fruits/')
         for fruit_file in fruit_files:
             if fruit_file not in ['uva.png', 'cherrie.png']:
                 fruit_image = pygame.transform.scale(pygame.image.load(f'assets/images/fruits/{fruit_file}').convert_alpha(), (64, 64))
-                self.fruit_images['other'].append(fruit_image)
+                self.fruit_images['frutas'].append(fruit_image)
 
         self.fruits = self.randomize_fruits()
+
+        # Load sounds
+        self.sound_correct = pygame.mixer.Sound('assets/sounds/click_right.mp3')
+        self.sound_wrong = pygame.mixer.Sound('assets/sounds/click_wrong.mp3')
+
+        # Play background music in loop
+        pygame.mixer.music.load('assets/sounds/minigame_track.mp3')
+        pygame.mixer.music.play(-1)  # -1 makes the music loop indefinitely
 
         self.font_color = (0, 150, 200)
         self.font_size = 25
@@ -47,9 +55,9 @@ class FruitMinigame():
                 fruit_type = 'uva'
                 num_uvas -= 1
             else:
-                fruit_type = random.choice(['cherrie', 'other'])
-            if fruit_type == 'other':
-                fruit_image = random.choice(self.fruit_images['other'])
+                fruit_type = random.choice(['cherrie', 'frutas'])
+            if fruit_type == 'frutas':
+                fruit_image = random.choice(self.fruit_images['frutas'])
             else:
                 fruit_image = self.fruit_images[fruit_type]
             fruit_rect = fruit_image.get_rect(
@@ -63,7 +71,8 @@ class FruitMinigame():
     def draw_text_box(self):
         quest_box = pygame.Rect(300, 20, len('Get the Grape!!') * (self.font_size - self.font_width) + self.font_width, 50)
         pygame.draw.rect(self.screen, (255, 255, 255), quest_box)
-        pygame.draw.rect(self.screen, self.font_color, quest_box, 3)
+        pygame.draw.rect(self.screen, self.font_color, quest_box, 6)
+        pygame.draw.rect(self.screen, (200, 200, 0), quest_box, 3)
         texto = self.fonte.render('Get the Grape!!', False, self.font_color)
         self.screen.blit(texto, (quest_box.left + self.font_width, quest_box.centery - quest_box.height / 4))
 
@@ -72,16 +81,13 @@ class FruitMinigame():
         if overlap_rect.width == 0 or overlap_rect.height == 0:
             return False
         
-        surface1 = pygame.surfarray.array_alpha(image1)
-        surface2 = pygame.surfarray.array_alpha(image2)
+        # Convert images to the correct format
+        mask1 = pygame.mask.from_surface(image1)
+        mask2 = pygame.mask.from_surface(image2)
 
-        x1, y1 = overlap_rect.left - rect1.left, overlap_rect.top - rect1.top
-        x2, y2 = overlap_rect.left - rect2.left, overlap_rect.top - rect2.top
-
-        for x in range(overlap_rect.width):
-            for y in range(overlap_rect.height):
-                if surface1[x1 + x][y1 + y] and surface2[x2 + x][y2 + y]:
-                    return True
+        offset = (overlap_rect.left - rect2.left, overlap_rect.top - rect2.top)
+        if mask1.overlap(mask2, offset):
+            return True
         return False
 
     def run(self):
@@ -95,13 +101,13 @@ class FruitMinigame():
                         self.running = False
 
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_a]:
+            if keys[pygame.K_LEFT]:
                 self.char_rect.x -= 5
-            if keys[pygame.K_d]:
+            if keys[pygame.K_RIGHT]:
                 self.char_rect.x += 5
-            if keys[pygame.K_w]:
+            if keys[pygame.K_UP]:
                 self.char_rect.y -= 5
-            if keys[pygame.K_s]:
+            if keys[pygame.K_DOWN]:
                 self.char_rect.y += 5
 
             background = pygame.image.load('assets/images/background_1.png').convert_alpha()
@@ -116,6 +122,10 @@ class FruitMinigame():
             for fruit_image, fruit_rect, fruit_type in self.fruits:
                 self.screen.blit(fruit_image, fruit_rect)
                 if self.pixel_collision(self.char_rect, self.character, fruit_rect, fruit_image):
+                    if fruit_type == 'uva':
+                        self.sound_correct.play()
+                    else:
+                        self.sound_wrong.play()
                     print(f"You touched a {fruit_type}!")
                     self.running = False
 

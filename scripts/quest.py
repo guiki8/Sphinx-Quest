@@ -1,4 +1,5 @@
 import pygame, sys, time
+from pygame import mixer
 from scripts.utils import load_image, load_images, Animation
 
 class Quest():
@@ -9,7 +10,9 @@ class Quest():
         self.pergunta = info['pergunta']
         self.respostas = [info['r1'], info['r2'], info['r3'], info['r4']]
         self.screen = screen
-        self.font_color = (0, 150, 200)
+        self.font_color = (0, 150, 200)  # Azul para o texto e borda interna
+        self.outer_border_color = (200, 200, 0)  # Amarelo para a borda externa
+        self.answer_border_color = (100, 100, 100)  # Preto para a borda das respostas
         self.font_size = 25
         self.fonte = pygame.font.Font('assets/fonts/Pixel.ttf', self.font_size)
         self.fonte_bold = pygame.font.Font('assets/fonts/PixelBold.ttf', self.font_size)
@@ -30,16 +33,19 @@ class Quest():
         imagem_frame = self.esfinge_anim.img()
         self.screen.blit(pygame.transform.scale(imagem_frame, (500, 500)), (380, 20))
 
+        # Desenha a borda amarela externa e a borda azul interna para a caixa da pergunta
         quest_box = pygame.Rect(100, 50, len(self.info['pergunta']) * (self.font_size - self.font_width) + self.font_width, 50)
+        pygame.draw.rect(self.screen, self.outer_border_color, quest_box.inflate(6, 6))  # Borda externa amarela
         pygame.draw.rect(self.screen, (255, 255, 255), quest_box)
-        pygame.draw.rect(self.screen, self.font_color, quest_box, 3)
+        pygame.draw.rect(self.screen, self.font_color, quest_box, 3)  # Borda interna azul
         texto = self.fonte.render(self.pergunta, False, self.font_color)
         self.screen.blit(texto, (quest_box.left + self.font_width, quest_box.centery - quest_box.height / 4))
 
+        # Desenha as caixas de resposta com borda preta
         for i in range(4):
             quest_box = pygame.Rect(100, 110 + i * 60, len(self.info['r' + str(1 + i)]) * (self.font_size - self.font_width) + self.font_width, 50)
             pygame.draw.rect(self.screen, (255, 255, 255), quest_box)
-            pygame.draw.rect(self.screen, self.font_color, quest_box, 3)
+            pygame.draw.rect(self.screen, self.answer_border_color, quest_box, 3)  # Borda preta para as respostas
             texto = self.fonte.render(self.info['r' + str(1 + i)], False, self.font_color)
             self.screen.blit(texto, (quest_box.left + self.font_width, quest_box.centery - quest_box.height / 4))
 
@@ -63,6 +69,8 @@ class Button():
         self.button_num = button_num
         self.resp_correta = info['rcorreta']
         self.is_pressed = False
+        self.sound_correct = pygame.mixer.Sound('assets/sounds/click_right.mp3')
+        self.sound_wrong = pygame.mixer.Sound('assets/sounds/click_wrong.mp3')
 
     def update(self):
         self.mouse_pos = pygame.mouse.get_pos()
@@ -76,9 +84,11 @@ class Button():
                     self.is_pressed = False
                     if self.button_num == self.resp_correta:
                         print('acertou!')
+                        self.sound_correct.play()
                         return True
                     else:
                         print('errou')
+                        self.sound_wrong.play()
                         return False
 
         if self.is_pressed:
