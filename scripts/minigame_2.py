@@ -37,8 +37,8 @@ class TargetMinigame():
         self.sound_wrong = pygame.mixer.Sound('assets/sounds/click_wrong.mp3')
 
         # Tocar música de fundo em loop
-        pygame.mixer.music.load('assets/sounds/minigame_track.mp3')
-        pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop indefinidamente
+        # pygame.mixer.music.load('assets/sounds/quest_track.mp3')
+        # pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop indefinidamente
 
         self.last_direction = None  # Rastrear última direção para atirar
 
@@ -58,6 +58,10 @@ class TargetMinigame():
 
         # Definir dimensões da caixa de texto da tarefa
         self.task_text_box_rect = pygame.Rect(25, 25, 400, 50)
+
+        # Tasks completas
+        self.tasks_completed = 0
+        self.game_conclued = 0
 
     def run(self):
         while self.running:
@@ -106,6 +110,11 @@ class TargetMinigame():
                 self.blink_time = current_time
                 self.show_task_text = not self.show_task_text
 
+            if self.game_conclued == 1:
+                return True
+            if self.game_conclued == 2:
+                return False
+
             self.draw_frame()
 
             pygame.display.flip()
@@ -121,9 +130,14 @@ class TargetMinigame():
         if "target_color" in self.current_task:
             if target['color'] == self.current_task["target_color"]:
                 self.sound_correct.play()
-                self.current_task = self.generate_new_task()  # Gerar nova tarefa
+                self.tasks_completed += 1
+                if self.tasks_completed == 5:
+                    self.game_conclued = 1
+                else:
+                    self.current_task = self.generate_new_task()  # Gerar nova tarefa
             else:
                 self.sound_wrong.play()
+                self.game_conclued = 2
         elif "target_shape" in self.current_task:
             if self.current_task["target_shape"] == target['shape']:
                 self.sound_correct.play()
@@ -219,8 +233,9 @@ class TargetMinigame():
         return random.choice(tasks)
 
 # Inicializar Pygame e criar uma tela
-pygame.init()
-screen = pygame.display.set_mode((800, 600))
-pygame.display.set_caption('Minigame de Alvos')
-game = TargetMinigame(screen)
-game.run()
+if __name__ == "__main__":
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption('Minigame de Alvos')
+    game = TargetMinigame(screen)
+    game.run()

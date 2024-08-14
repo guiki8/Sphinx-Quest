@@ -4,6 +4,7 @@ from scripts.menu import MenuEsfinge
 from scripts.quest import Quest
 from scripts.utils import load_image, load_images
 from scripts.minigame_1 import FruitMinigame
+from scripts.minigame_2 import TargetMinigame
 
 class Game:
     def __init__(self):
@@ -36,6 +37,7 @@ class Game:
         ]
 
         self.current_quest_index = 0
+        self.phase = 1  # Define a fase inicial do jogo
 
     def fade_out(self, duration):
         fade_surface = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
@@ -60,34 +62,69 @@ class Game:
             self.screen.fill((30, 30, 30))
             self.clock.tick(120)
 
-            # Verifica se ainda há quests a serem completadas
-            if self.current_quest_index < len(self.quests):
-                current_quest = self.quests[self.current_quest_index]
-
-                # Se a quest for completada corretamente, avança para a próxima
-                if current_quest.load_quest():
+            # Verifica a fase atual do jogo
+            if self.phase == 1:
+                # Quests de dificuldade 1
+                if self.current_quest_index < 3:
+                    current_quest = self.quests[self.current_quest_index]
+                    if current_quest.load_quest():
+                        time.sleep(0.5)
+                        self.current_quest_index += 1
+                else:
+                    # Inicia o primeiro minigame
                     time.sleep(0.5)
-                    self.current_quest_index += 1
+                    print('Iniciando o minigame 1')
+                    self.fade_out(1000)
+                    minigame_result = FruitMinigame(self.screen).run()
 
-                # Após completar as 3 quests fáceis, inicia o minigame
-                if self.current_quest_index == 3:
-                    time.sleep(0.5)
-                    print('Iniciando o minigame')
-                    self.fade_out(1000)  # Fade out in 1 second
-                    minigame_result = FruitMinigame(self.screen).run()  # Inicia o mini game
-
-                    if minigame_result == False:  # Se o jogador perder o minigame
+                    if not minigame_result:
                         print('Você perdeu o minigame! Fechando o jogo...')
                         pygame.quit()
                         sys.exit()
                     else:
-                        print('Você venceu o minigame! Parando a música e continuando para as quests de dificuldade média...')
-                        pygame.mixer.music.stop()  # Parando a música do minigame
-                        self.fade_in(1000)  # Fade in in 1 second
+                        print('Você venceu o minigame! Continuando para as quests de dificuldade 2...')
+                        pygame.mixer.music.stop()
+                        self.fade_in(1000)
+                        self.phase = 2
+                        self.current_quest_index = 3  # A partir da quest 4
+
+            elif self.phase == 2:
+                # Quests de dificuldade 2
+                if self.current_quest_index < 6:
+                    current_quest = self.quests[self.current_quest_index]
+                    if current_quest.load_quest():
+                        time.sleep(0.5)
                         self.current_quest_index += 1
-            else:
-                # Se todas as quests e minigames forem completados, encerra o jogo ou continue com outra lógica
-                print('Todas as quests foram completadas!')
+                else:
+                    # Inicia o segundo minigame
+                    time.sleep(0.5)
+                    print('Iniciando o minigame 2')
+                    self.fade_out(1000)
+                    minigame_result = TargetMinigame(self.screen).run()
+
+                    if not minigame_result:
+                        print('Você perdeu o minigame! Fechando o jogo...')
+                        pygame.quit()
+                        sys.exit()
+                    else:
+                        print('Você venceu o minigame! Continuando para as quests de dificuldade 3...')
+                        pygame.mixer.music.stop()
+                        self.fade_in(1000)
+                        self.phase = 3
+                        self.current_quest_index = 6  # A partir da quest 7
+
+            elif self.phase == 3:
+                # Quests de dificuldade 3
+                if self.current_quest_index < 9:
+                    current_quest = self.quests[self.current_quest_index]
+                    if current_quest.load_quest():
+                        time.sleep(0.5)
+                        self.current_quest_index += 1
+                else:
+                    # Todas as quests e minigames foram completados
+                    print('Parabéns! Você completou o jogo!')
+                    pygame.quit()
+                    sys.exit()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

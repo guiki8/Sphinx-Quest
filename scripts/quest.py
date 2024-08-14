@@ -18,6 +18,10 @@ class Quest():
         self.fonte_bold = pygame.font.Font('assets/fonts/PixelBold.ttf', self.font_size)
         self.font_width = self.font_size * 0.3
 
+        # Tocar música de fundo em loop
+        pygame.mixer.music.load('assets/sounds/minigame_track.mp3')
+        pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop indefinidamente
+
         self.assets = {
             'button': load_image('button/1.png'),
             'push_button': load_image('button/2.png'),
