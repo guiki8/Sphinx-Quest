@@ -114,6 +114,9 @@ class FruitMinigame():
             if keys[pygame.K_DOWN]:
                 self.char_rect.y += 5
 
+            # Restrict movement to screen bounds
+            self.char_rect.clamp_ip(self.screen.get_rect())
+
             background = pygame.image.load('assets/images/background_1.png').convert_alpha()
             background = pygame.transform.scale(background, (400, 400))
 
