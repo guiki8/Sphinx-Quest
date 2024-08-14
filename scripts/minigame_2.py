@@ -37,8 +37,8 @@ class TargetMinigame():
         self.sound_wrong = pygame.mixer.Sound('assets/sounds/click_wrong.mp3')
 
         # Tocar música de fundo em loop
-        # pygame.mixer.music.load('assets/sounds/quest_track.mp3')
-        # pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop indefinidamente
+        pygame.mixer.music.load('assets/sounds/minigame_track.mp3')
+        pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop indefinidamente
 
         self.last_direction = None  # Rastrear última direção para atirar
 
