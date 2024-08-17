@@ -1,8 +1,6 @@
 import pygame
 import sys
 import random
-import os
-from pygame import mixer
 
 class TargetMinigame():
     def __init__(self, screen):
@@ -40,7 +38,10 @@ class TargetMinigame():
         pygame.mixer.music.load('assets/sounds/minigame_track.mp3')
         pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop indefinidamente
 
-        self.last_direction = None  # Rastrear última direção para atirar
+        self.last_direction = 'down'  # Inicializar com uma direção padrão
+
+        # Carregar imagem da seta
+        self.arrow = pygame.transform.scale(pygame.image.load('assets/images/arrow.png').convert_alpha(), (32, 32))
 
         # Carregar fonte para contagem de pedras e instruções da tarefa
         self.font = pygame.font.Font('assets/fonts/Pixel.ttf', 24)
@@ -64,61 +65,53 @@ class TargetMinigame():
         self.game_conclued = 0
 
     def run(self):
-        while self.running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
-                    if event.key == pygame.K_SPACE and self.collected_rocks:  # Atirar uma pedra
-                        self.shoot_rock()
-
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                self.char_rect.x -= 5
-                self.last_direction = 'left'
-            if keys[pygame.K_RIGHT]:
-                self.char_rect.x += 5
-                self.last_direction = 'right'
-            if keys[pygame.K_UP]:
-                self.char_rect.y -= 5
-                self.last_direction = 'up'
-            if keys[pygame.K_DOWN]:
-                self.char_rect.y += 5
-                self.last_direction = 'down'
-
-            # Restringir movimento aos limites da tela
-            self.char_rect.clamp_ip(self.screen.get_rect())
-
-            # Spawn de pedras no chão
-            if random.random() < 0.01:  # Chance aleatória para spawn de uma pedra
-                rock_rect = self.rock_img.get_rect(center=(random.randint(50, self.width - 50), random.randint(50, self.height - 50)))
-                rock_mask = pygame.mask.from_surface(self.rock_img)  # Criar máscara para a pedra
-                self.rocks_on_ground.append({'image': self.rock_img, 'rect': rock_rect, 'mask': rock_mask})
-
-            # Verificar colisão com pedras e coletá-las
-            for rock in self.rocks_on_ground[:]:
-                if self.check_collision(self.char_mask, self.char_rect, rock['mask'], rock['rect']):
-                    self.collected_rocks.append(rock)  # Adicionar às pedras coletadas
-                    self.rocks_on_ground.remove(rock)  # Remover das pedras no chão
-
-            # Atualizar a visibilidade da caixa de texto da tarefa
-            current_time = pygame.time.get_ticks()
-            if current_time - self.blink_time > self.blink_interval:
-                self.blink_time = current_time
-                self.show_task_text = not self.show_task_text
-
-            if self.game_conclued == 1:
-                return True
-            if self.game_conclued == 2:
-                return False
-
-            self.draw_frame()
-
-            pygame.display.flip()
-            self.clock.tick(60)
+       while self.running:
+           for event in pygame.event.get():
+               if event.type == pygame.QUIT:
+                   pygame.quit()
+                   sys.exit()
+               if event.type == pygame.KEYDOWN:
+                   if event.key == pygame.K_ESCAPE:
+                       self.running = False
+                   if event.key == pygame.K_SPACE and self.collected_rocks:  # Atirar uma pedra
+                       self.shoot_rock()
+           keys = pygame.key.get_pressed()
+           if keys[pygame.K_LEFT]:
+               self.char_rect.x -= 5
+               self.last_direction = 'left'
+           if keys[pygame.K_RIGHT]:
+               self.char_rect.x += 5
+               self.last_direction = 'right'
+           if keys[pygame.K_UP]:
+               self.char_rect.y -= 5
+               self.last_direction = 'up'
+           if keys[pygame.K_DOWN]:
+               self.char_rect.y += 5
+               self.last_direction = 'down'
+           # Restringir movimento aos limites da tela
+           self.char_rect.clamp_ip(self.screen.get_rect())
+           # Spawn de pedras no chão
+           if random.random() < 0.01:  # Chance aleatória para spawn de uma pedra
+               rock_rect = self.rock_img.get_rect(center=(random.randint(50, self.width - 50), random.randint(50, self.height - 50)))
+               rock_mask = pygame.mask.from_surface(self.rock_img)  # Criar máscara para a pedra
+               self.rocks_on_ground.append({'image': self.rock_img, 'rect': rock_rect, 'mask': rock_mask})
+           # Verificar colisão com pedras e coletá-las
+           for rock in self.rocks_on_ground[:]:
+               if self.check_collision(self.char_mask, self.char_rect, rock['mask'], rock['rect']):
+                   self.collected_rocks.append(rock)  # Adicionar às pedras coletadas
+                   self.rocks_on_ground.remove(rock)  # Remover das pedras no chão
+           # Atualizar a visibilidade da caixa de texto da tarefa
+           current_time = pygame.time.get_ticks()
+           if current_time - self.blink_time > self.blink_interval:
+               self.blink_time = current_time
+               self.show_task_text = not self.show_task_text
+           if self.game_conclued == 1:
+               return True
+           if self.game_conclued == 2:
+               return False
+           self.draw_frame()
+           pygame.display.flip()
+           self.clock.tick(60)
 
     def check_collision(self, mask1, rect1, mask2, rect2):
         """Verificar colisão pixel-perfect."""
@@ -177,6 +170,23 @@ class TargetMinigame():
                     target['rect'].center = (random.randint(50, self.width - 50), random.randint(50, self.height - 50))
                     return  # Parar a função após um acerto
 
+    def draw_arrow(self):
+        """Desenhar a seta ao lado do personagem."""
+        if self.last_direction == 'left':
+            arrow_rotated = pygame.transform.rotate(self.arrow, 90)
+            arrow_pos = (self.char_rect.left - 32, self.char_rect.centery - 16)
+        elif self.last_direction == 'right':
+            arrow_rotated = pygame.transform.rotate(self.arrow, -90)
+            arrow_pos = (self.char_rect.right, self.char_rect.centery - 16)
+        elif self.last_direction == 'up':
+            arrow_rotated = self.arrow
+            arrow_pos = (self.char_rect.centerx - 16, self.char_rect.top - 32)
+        else:  # direction == 'down'
+            arrow_rotated = pygame.transform.rotate(self.arrow, 180)
+            arrow_pos = (self.char_rect.centerx - 16, self.char_rect.bottom)
+
+        self.screen.blit(arrow_rotated, arrow_pos)
+
     def draw_text_box(self, texto, x, y, is_task_text):
         """Desenhar uma caixa de texto com bordas estilizadas."""
         if is_task_text and not self.show_task_text:
@@ -209,11 +219,14 @@ class TargetMinigame():
         # Desenhar o personagem
         self.screen.blit(self.character, self.char_rect)
 
+        # Desenhar seta indicando direção do personagem
+        self.draw_arrow()
+
         # Desenhar caixa de texto da tarefa
         self.draw_text_box(self.current_task["description"], self.task_text_box_rect.x, self.task_text_box_rect.y, True)
 
         # Desenhar caixa de texto da contagem de pedras
-        rock_count_text = f"Pedras: {len(self.collected_rocks)}"
+        rock_count_text = f"Rocks: {len(self.collected_rocks)}"
         self.draw_text_box(rock_count_text, 25, self.height - 60, False)  # Não piscar a caixa de texto da contagem de pedras
 
     def generate_new_task(self):
