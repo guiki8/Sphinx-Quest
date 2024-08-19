@@ -21,7 +21,7 @@ class GoldenCatMinigame():
         for fruit_image in fruit_images:
             img = pygame.transform.scale(pygame.image.load(f'assets/images/fruits/{fruit_image}').convert_alpha(), (64, 64))
             rect = img.get_rect(center=(random.randint(50, self.width - 50), random.randint(50, self.height - 50)))
-            self.fruits.append({'image': img, 'rect': rect})
+            self.fruits.append({'image': img, 'rect': rect, 'in_box': False})
 
         # Carregar imagem da caixa
         self.box = pygame.transform.scale(pygame.image.load('assets/images/box.png').convert_alpha(), (64, 64))
@@ -146,7 +146,7 @@ class GoldenCatMinigame():
 
         # Desenhar as frutas
         for fruit in self.fruits:
-            if self.collected_fruit != fruit:
+            if self.collected_fruit != fruit and not fruit['in_box']:
                 self.screen.blit(fruit['image'], fruit['rect'])
 
         # Desenhar o personagem
@@ -159,7 +159,7 @@ class GoldenCatMinigame():
             self.screen.blit(self.collected_fruit['image'], fruit_rect)
 
         # Desenhar o gato dourado
-        self.screen.blit(self.golden_cat, self.cat_rect)       
+        self.screen.blit(self.golden_cat, self.cat_rect)
 
     def generate_new_task(self):
         """Gerar uma nova tarefa aleatória."""
@@ -172,7 +172,7 @@ class GoldenCatMinigame():
     def try_collect_fruit(self):
         """Tentar coletar uma fruta se o jogador estiver sobre ela e pressionar a barra de espaço."""
         for fruit in self.fruits:
-            if self.check_collision(self.char_mask, self.char_rect, pygame.mask.from_surface(fruit['image']), fruit['rect']):
+            if self.check_collision(self.char_mask, self.char_rect, pygame.mask.from_surface(fruit['image']), fruit['rect']) and not fruit['in_box']:
                 self.collected_fruit = fruit
                 self.is_holding_fruit = True
                 break  # Pegar apenas uma fruta
@@ -182,17 +182,17 @@ class GoldenCatMinigame():
         if self.collected_fruit:
             if self.collected_fruit == self.current_task["target_fruit"] and self.char_rect.colliderect(self.box_rect):
                 self.sound_correct.play()
+                self.collected_fruit['in_box'] = True
                 self.tasks_completed += 1
                 self.current_task = self.generate_new_task()  # Gerar nova tarefa
+            elif self.char_rect.colliderect(self.cat_rect) and self.collected_fruit['in_box']:
+                self.sound_correct.play()
+                self.game_conclued = 1  # Alimentou o gato, venceu o jogo
             else:
                 self.sound_wrong.play()
 
-            # Posicionar a fruta no local em que o jogador a soltou
-            self.collected_fruit['rect'].center = self.char_rect.center
-
-            # Resetar a coleta de fruta
-            self.is_holding_fruit = False
             self.collected_fruit = None
+            self.is_holding_fruit = False
 
 
 # Inicializar Pygame e criar uma tela
