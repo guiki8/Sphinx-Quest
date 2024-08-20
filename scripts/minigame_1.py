@@ -17,13 +17,13 @@ class FruitMinigame():
 
         # Load fruits images
         self.fruit_images = {
-            'uva': pygame.transform.scale(pygame.image.load('assets/images/fruits/uva.png').convert_alpha(), (64, 64)),
-            'cherrie': pygame.transform.scale(pygame.image.load('assets/images/fruits/cherrie.png').convert_alpha(), (64, 64)),
+            'grape': pygame.transform.scale(pygame.image.load('assets/images/fruits/grape.png').convert_alpha(), (64, 64)),
+            'cherry': pygame.transform.scale(pygame.image.load('assets/images/fruits/cherry.png').convert_alpha(), (64, 64)),
             'frutas': []
         }
         fruit_files = os.listdir('assets/images/fruits/')
         for fruit_file in fruit_files:
-            if fruit_file not in ['uva.png', 'cherrie.png']:
+            if fruit_file not in ['grape.png', 'cherry.png']:
                 fruit_image = pygame.transform.scale(pygame.image.load(f'assets/images/fruits/{fruit_file}').convert_alpha(), (64, 64))
                 self.fruit_images['frutas'].append(fruit_image)
 
@@ -50,22 +50,32 @@ class FruitMinigame():
     def randomize_fruits(self):
         fruits = []
         num_uvas = random.randint(1, 3)  # Number of grapes
-        for _ in range(10):  # Add 10 random fruits
-            if num_uvas > 0:
-                fruit_type = 'uva'
-                num_uvas -= 1
-            else:
-                fruit_type = random.choice(['cherrie', 'frutas'])
+        num_fruits = 10  # Total number of fruits
+
+        # Ensure we don't place more fruits than possible
+        while num_fruits > 0:
+            fruit_type = 'grape' if num_uvas > 0 else random.choice(['cherry', 'frutas'])
             if fruit_type == 'frutas':
                 fruit_image = random.choice(self.fruit_images['frutas'])
             else:
                 fruit_image = self.fruit_images[fruit_type]
-            fruit_rect = fruit_image.get_rect(
-                center=(random.randint(50, self.width - 50), random.randint(50, self.height - 50)))
-            while fruit_rect.colliderect(self.char_rect):  # Ensure fruit does not spawn on the character
-                fruit_rect = fruit_image.get_rect(
-                    center=(random.randint(50, self.width - 50), random.randint(50, self.height - 50)))
-            fruits.append((fruit_image, fruit_rect, fruit_type))
+            
+            # Generate fruit position and check for overlap with other fruits
+            placed = False
+            while not placed:
+                fruit_rect = fruit_image.get_rect(center=(random.randint(50, self.width - 50), random.randint(50, self.height - 50)))
+                overlap = False
+                for _, rect, _ in fruits:
+                    if fruit_rect.colliderect(rect):
+                        overlap = True
+                        break
+                if not overlap and not fruit_rect.colliderect(self.char_rect):
+                    fruits.append((fruit_image, fruit_rect, fruit_type))
+                    num_fruits -= 1
+                    if fruit_type == 'grape':
+                        num_uvas -= 1
+                    placed = True
+        
         return fruits
 
     def draw_text_box(self):
@@ -129,7 +139,7 @@ class FruitMinigame():
             for fruit_image, fruit_rect, fruit_type in self.fruits:
                 self.screen.blit(fruit_image, fruit_rect)
                 if self.pixel_collision(self.char_rect, self.character, fruit_rect, fruit_image):
-                    if fruit_type == 'uva':
+                    if fruit_type == 'grape':
                         self.sound_correct.play()
                         print("You got a grape!")
                         return True
@@ -138,7 +148,6 @@ class FruitMinigame():
                         print(f"You touched a {fruit_type}!")
                         pygame.time.delay(1000)  # Adiciona um atraso de 1000ms para garantir que o som toque completamente
                         return False
-
 
             # Draw the character
             self.screen.blit(self.character, self.char_rect)

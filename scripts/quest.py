@@ -1,5 +1,4 @@
 import pygame, sys, time
-from pygame import mixer
 from scripts.utils import load_image, load_images, Animation
 
 class Quest():

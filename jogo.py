@@ -1,10 +1,10 @@
 import pygame, time, sys
 from pygame import mixer
-from scripts.menu import MenuEsfinge
 from scripts.quest import Quest
 from scripts.utils import load_image, load_images
 from scripts.minigame_1 import FruitMinigame
 from scripts.minigame_2 import TargetMinigame
+from scripts.minigame_3 import GoldenCatMinigame
 
 class Game:
     def __init__(self):
@@ -59,7 +59,9 @@ class Game:
 
     def run(self):
         while True:
-            self.screen.fill((30, 30, 30))
+            background = pygame.image.load('assets/images/background_2.png').convert_alpha()
+            self.screen.blit(background, (0, 0))
+
             self.clock.tick(120)
 
             # Verifica a fase atual do jogo
@@ -121,10 +123,20 @@ class Game:
                         time.sleep(0.5)
                         self.current_quest_index += 1
                 else:
-                    # Todas as quests e minigames foram completados
-                    print('Parabéns! Você completou o jogo!')
-                    pygame.quit()
-                    sys.exit()
+                    # Inicia o terceiro minigame
+                    time.sleep(0.5)
+                    print('Iniciando o minigame 3')
+                    self.fade_out(1000)
+                    minigame_result = GoldenCatMinigame(self.screen).run()
+
+                    if not minigame_result:
+                        print('Você perdeu o minigame! Fechando o jogo...')
+                        pygame.quit()
+                        sys.exit()
+                    else:
+                        print('Você completou todas as fases do jogo!')
+                        pygame.quit()
+                        sys.exit()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
