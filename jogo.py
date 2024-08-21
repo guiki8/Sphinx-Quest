@@ -38,6 +38,7 @@ class Game:
 
         self.current_quest_index = 0
         self.phase = 1  # Define a fase inicial do jogo
+        self.background = pygame.transform.scale(pygame.image.load('assets/images/background_2.png').convert_alpha(), (800, 600))
 
     def fade_out(self, duration):
         fade_surface = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
@@ -59,8 +60,7 @@ class Game:
 
     def run(self):
         while True:
-            background = pygame.image.load('assets/images/background_2.png').convert_alpha()
-            self.screen.blit(background, (0, 0))
+            self.screen.blit(self.background, (0, 0))
 
             self.clock.tick(120)
 

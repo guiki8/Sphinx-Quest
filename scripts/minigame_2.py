@@ -124,7 +124,7 @@ class TargetMinigame():
             if target['color'] == self.current_task["target_color"]:
                 self.sound_correct.play()
                 self.tasks_completed += 1
-                if self.tasks_completed == 5:
+                if self.tasks_completed == 3:
                     self.game_conclued = 1
                 else:
                     self.current_task = self.generate_new_task()  # Gerar nova tarefa
