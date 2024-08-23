@@ -1,7 +1,6 @@
 import pygame, time, sys
 from pygame import mixer
 from scripts.quest import Quest
-from scripts.utils import load_image, load_images
 from scripts.minigame_1 import FruitMinigame
 from scripts.minigame_2 import TargetMinigame
 from scripts.minigame_3 import GoldenCatMinigame
